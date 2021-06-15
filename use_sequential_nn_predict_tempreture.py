@@ -87,7 +87,7 @@ for epoch in range(epochs):
 # 预测结果展示
 x_test = torch.tensor(input_features, dtype=torch.float, requires_grad=True)
 y_test = model(x_test).data.numpy()
-print(y_test.shape)
+# print(y_test.shape)  # (348, 1) 需要将其转为-维
 # 实际的日期和温度值df表格
 ture_df = pd.DataFrame({'date': dates, 'tempreture': y})
 predict_df = pd.DataFrame({'date': dates, 'tempreture': y_test.reshape(-1)})
