@@ -248,14 +248,27 @@ scheduler = torch.optim.lr_scheduler.StepLR(optimizer_ft, step_size=7, gamma=0.1
 # 最后一层已经LogSoftmax()了，所以不能nn.CrossEntropyLoss()来计算了，nn.CrossEntropyLoss()相当于logSoftmax()和nn.NLLLoss()整合
 criterion = nn.NLLLoss()
 
-def train_model(model, dataloaders, criterion, optimizer, epochs, checkpoint_filename, is_incepption=False):
+def train_model(model, dataloaders, criterion, optimizer, scheduler, epochs, checkpoint_filename, is_incepption=False):
     since = time.time()
     # 记录当前model在验证集上最佳的准确率，用于保存最佳model到本地
     best_acc = 0
     # 如果之前训练过，可以通过判断 checkpoint文件在不在决定是否 续着训练
-    '''
-    
-    '''
+    if os.path.exists(checkpoint_filename):
+        print('load the checkpoint!')
+        checkpoint = torch.load(checkpoint_filename)
+        model_ft.load_state_dict(checkpoint['state_dict'])
+
+        # 因为此时我们训练了所有层，所以当前 优化器中待训练的参数 和 checkpoint中的 数量是不一致的，此时无法加载优化器，只能重新设置一个优化器
+        # optimizer.load_state_dict(checkpoint['optimizer'])
+
+        best_acc = checkpoint['best_acc']
+        # model.class_to_idx = checkpoint['mapping']
+
+        # 如果不是加载历史的 model的优化器 ，optimizer.param_group[0]['lr']为空会报错
+        LRs = [optimizer.param_group[0]['lr']]
+
+        print(best_acc, LRs)
+
     model.to(device)
     # 记录训练中每个epochs的 acc 和 loss 以便观察
     train_acc_history = []
@@ -353,6 +366,8 @@ def train_model(model, dataloaders, criterion, optimizer, epochs, checkpoint_fil
 
             # 记录每个 epoch 中的 train 的 acc 和 loss 变化数值，用于可视化训练信息
             if phase == 'train':
+                # 更新 优化器的 学习率，仅在训练的epoch更新
+                scheduler.step()
                 train_acc_history.append(epoch_acc)
                 train_losses.append(epoch_loss)
             if phase == 'valid':
@@ -376,4 +391,4 @@ def train_model(model, dataloaders, criterion, optimizer, epochs, checkpoint_fil
 
 # 开始训练 --- 仅训练最后新增的全连接层
 model_ft, val_acc_history, val_losses, train_acc_history, train_losses, LRs = train_model(model_ft, dataloaders,
-                                                        criterion, optimizer_ft, epochs, checkpoint_filename)
+                                                        criterion, optimizer_ft, scheduler, epochs, checkpoint_filename)
