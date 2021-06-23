@@ -29,7 +29,7 @@ criterion = torch.nn.NLLLoss()
 # 查看gpu是否可用
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
-def train_model(model, dataloaders, criterion, optimizer, epochs, checkpoint_filename, is_incepption=False):
+def train_model(model, dataloaders, criterion, optimizer, scheduler, epochs, checkpoint_filename, is_incepption=False):
     since = time.time()
     # 记录当前model在验证集上最佳的准确率，用于保存最佳model到本地
     best_acc = 0
@@ -148,6 +148,7 @@ def train_model(model, dataloaders, criterion, optimizer, epochs, checkpoint_fil
 
             # 记录每个 epoch 中的 train 的 acc 和 loss 变化数值，用于可视化训练信息
             if phase == 'train':
+                scheduler.step()
                 train_acc_history.append(epoch_acc)
                 train_losses.append(epoch_loss)
             if phase == 'valid':
@@ -220,4 +221,4 @@ dataloaders = {x: torch.utils.data.DataLoader(dataset=image_datasets[x], batch_s
                                               drop_last=True) for x in ['train', 'valid']}
 
 
-train_model(model_ft, dataloaders, criterion, optimizer, epochs=20, checkpoint_filename=checkpoint_filename)
+train_model(model_ft, dataloaders, criterion, optimizer, scheduler, epochs=20, checkpoint_filename=checkpoint_filename)
