@@ -24,7 +24,8 @@ class MLP(nn.Module):
         return self.out(self.se(F.relu(self.hidden(X))))
 
 # 有重复的block或者layer单元时，可以使用for循环配合 nn.ModuleList完成多个blocks的init定义，
-# ModuleList 或者 Sequential 返回的都可以看作是 list 里面存了所有的层（单元）
+# ModuleList 或者 Sequential 返回的都可以看作是 list 里面存了所有的层（单元），
+# 不同的是这样定义的变量会被记录计算图，而普通的list存放不会记录，导致无法更新这些参数
 # forward时，再用 for循环遍历 实例化的变量即可
 '''
 class Transformer(nn.Module):
